@@ -4,6 +4,7 @@
   "description": "MCP server exposing Brave Search via n8n webhook",
   "type": "module",
   "main": "dist/index.js",
+  "bin": "./dist/index.js",
   "scripts": {
     "build": "tsc",
     "start": "node dist/src/index.js",
