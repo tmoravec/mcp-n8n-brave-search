@@ -61,11 +61,10 @@ export class BraveSearchServer {
         const http = await import('node:http');
         this.httpServer = http.createServer(async (req, res) => {
             if (req.url === '/mcp' && req.method === 'POST') {
-                const MAX_BODY_SIZE = 1024 * 1024;
                 let body = '';
                 req.on('data', chunk => {
                     body += chunk;
-                    if (body.length > MAX_BODY_SIZE) {
+                    if (body.length > this.config.maxBodySize) {
                         res.statusCode = 413;
                         res.end('Payload too large');
                         return;

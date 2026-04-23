@@ -68,13 +68,6 @@ test('buildN8NRequestUrl accepts count <= 10 without capping', () => {
   assert.strictEqual(parsed.searchParams.get('count'), '10');
 });
 
-test('buildN8NRequestUrl rejects invalid freshness values', () => {
-  assert.throws(
-    () => buildN8NRequestUrl(N8N_URL, { query: 'test', freshness: 'invalid' as any }),
-    /Freshness must be one of/
-  );
-});
-
 test('buildN8NRequestUrl accepts valid freshness values', () => {
   for (const freshness of ['pd', 'pw', 'pm', 'py'] as const) {
     const url = buildN8NRequestUrl(N8N_URL, { query: 'test', freshness });
@@ -164,6 +157,78 @@ test('handleBraveSearch passes correct headers to n8n', async () => {
     await handleBraveSearch({ query: 'test' }, N8N_URL, N8N_TOKEN);
 
     assert.strictEqual(capturedAuthorization, 'Bearer secret');
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('handleBraveSearch constructs correct URL with query parameters', async () => {
+  const originalFetch = globalThis.fetch;
+  try {
+    let capturedUrl = '';
+
+    globalThis.fetch = async (url: string | URL | Request) => {
+      capturedUrl = url instanceof Request ? url.url : String(url);
+      return {
+        ok: true,
+        status: 200,
+        json: async () => [{ title: 'Test', url: 'https://example.com' }],
+      } as any;
+    };
+
+    await handleBraveSearch(
+      { query: 'nodejs trends', count: 5, country: 'US', freshness: 'pw', search_lang: 'en' },
+      N8N_URL,
+      N8N_TOKEN
+    );
+
+    const parsed = new URL(capturedUrl);
+    assert.strictEqual(parsed.searchParams.get('query'), 'nodejs trends');
+    assert.strictEqual(parsed.searchParams.get('count'), '5');
+    assert.strictEqual(parsed.searchParams.get('country'), 'US');
+    assert.strictEqual(parsed.searchParams.get('freshness'), 'pw');
+    assert.strictEqual(parsed.searchParams.get('search_lang'), 'en');
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('handleBraveSearch caps count at 10 in URL construction', async () => {
+  const originalFetch = globalThis.fetch;
+  try {
+    let capturedUrl = '';
+
+    globalThis.fetch = async (url: string | URL | Request) => {
+      capturedUrl = url instanceof Request ? url.url : String(url);
+      return {
+        ok: true,
+        status: 200,
+        json: async () => [],
+      } as any;
+    };
+
+    await handleBraveSearch({ query: 'test', count: 20 }, N8N_URL, N8N_TOKEN);
+
+    const parsed = new URL(capturedUrl);
+    assert.strictEqual(parsed.searchParams.get('count'), '10');
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('handleBraveSearch rejects CZ country via handler', async () => {
+  const originalFetch = globalThis.fetch;
+  try {
+    globalThis.fetch = async () => ({
+      ok: true,
+      status: 200,
+      json: async () => [],
+    }) as any;
+
+    await assert.rejects(
+      async () => handleBraveSearch({ query: 'test', country: 'CZ' }, N8N_URL, N8N_TOKEN),
+      /Country code "CZ" is not allowed/
+    );
   } finally {
     globalThis.fetch = originalFetch;
   }

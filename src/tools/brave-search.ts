@@ -17,7 +17,6 @@ export interface BraveSearchResult {
   results: unknown[];
 }
 
-const VALID_FRESHNESS_VALUES = ['pd', 'pw', 'pm', 'py'] as const;
 const MAX_COUNT = 10;
 const DEFAULT_COUNT = 4;
 const DEFAULT_COUNTRY = 'ALL';
@@ -54,9 +53,6 @@ export function buildN8NRequestUrl(
   url.searchParams.set('country', country);
 
   if (params.freshness) {
-    if (!VALID_FRESHNESS_VALUES.includes(params.freshness)) {
-      throw new Error(`Freshness must be one of: ${VALID_FRESHNESS_VALUES.join(', ')}`);
-    }
     url.searchParams.set('freshness', params.freshness);
   }
 

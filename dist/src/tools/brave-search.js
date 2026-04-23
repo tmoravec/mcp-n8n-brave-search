@@ -1,5 +1,4 @@
 import { z } from 'zod';
-const VALID_FRESHNESS_VALUES = ['pd', 'pw', 'pm', 'py'];
 const MAX_COUNT = 10;
 const DEFAULT_COUNT = 4;
 const DEFAULT_COUNTRY = 'ALL';
@@ -26,9 +25,6 @@ export function buildN8NRequestUrl(baseUrl, params) {
     }
     url.searchParams.set('country', country);
     if (params.freshness) {
-        if (!VALID_FRESHNESS_VALUES.includes(params.freshness)) {
-            throw new Error(`Freshness must be one of: ${VALID_FRESHNESS_VALUES.join(', ')}`);
-        }
         url.searchParams.set('freshness', params.freshness);
     }
     const searchLang = params.search_lang || DEFAULT_SEARCH_LANG;
