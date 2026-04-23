@@ -5,11 +5,19 @@ export interface Config {
   debug: boolean;
 }
 
+const DEFAULT_PORT = 3328;
+const DEFAULT_DEBUG = false;
+
 export function loadConfig(): Config {
   const n8nUrl = process.env.N8N_URL;
   const n8nToken = process.env.N8N_TOKEN;
-  const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 3328;
-  const debug = process.env.DEBUG === 'true';
+  const port = process.env.PORT ? parseInt(process.env.PORT, 10) : DEFAULT_PORT;
+  let debug: boolean;
+  if (process.env.DEBUG === 'true') {
+    debug = true;
+  } else {
+    debug = DEFAULT_DEBUG;
+  }
 
   if (!n8nUrl) {
     throw new Error('N8N_URL environment variable is required');

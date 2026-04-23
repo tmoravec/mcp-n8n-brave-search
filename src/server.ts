@@ -1,3 +1,4 @@
+import type { z } from 'zod';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { braveSearchInputSchema, handleBraveSearch } from './tools/brave-search.js';
@@ -6,6 +7,7 @@ import type { Config } from './config.js';
 export class BraveSearchServer {
   private server: McpServer;
   private transport: StreamableHTTPServerTransport;
+  private httpServer!: import('node:http').Server;
   private config: Config;
 
   constructor(config: Config) {
@@ -36,7 +38,7 @@ export class BraveSearchServer {
         description: 'Search the web using Brave Search. Returns relevant web pages, news, and information. Use for finding current information, news, facts, or researching topics.',
         inputSchema: braveSearchInputSchema,
       },
-      async (args) => {
+      async (args: z.infer<typeof braveSearchInputSchema>) => {
         try {
           if (this.config.debug) {
             console.log('[DEBUG] Tool call received:', args);
@@ -54,7 +56,15 @@ export class BraveSearchServer {
           if (this.config.debug) {
             console.error('[DEBUG] Tool error:', error);
           }
-          throw error;
+          return {
+            content: [
+              {
+                type: 'text',
+                text: `Error: ${error instanceof Error ? error.message : String(error)}`,
+              },
+            ],
+            isError: true,
+          };
         }
       }
     );
@@ -65,10 +75,18 @@ export class BraveSearchServer {
 
     const http = await import('node:http');
 
-    const httpServer = http.createServer(async (req, res) => {
+    this.httpServer = http.createServer(async (req, res) => {
       if (req.url === '/mcp' && req.method === 'POST') {
+        const MAX_BODY_SIZE = 1024 * 1024;
         let body = '';
-        req.on('data', chunk => { body += chunk; });
+        req.on('data', chunk => {
+          body += chunk;
+          if (body.length > MAX_BODY_SIZE) {
+            res.statusCode = 413;
+            res.end('Payload too large');
+            return;
+          }
+        });
         req.on('end', async () => {
           try {
             await this.transport.handleRequest(req, res, body ? JSON.parse(body) : undefined);
@@ -88,7 +106,7 @@ export class BraveSearchServer {
     });
 
     await new Promise<void>((resolve) => {
-      httpServer.listen(this.config.port, () => {
+      this.httpServer.listen(this.config.port, () => {
         if (this.config.debug) {
           console.log(`[DEBUG] Brave Search MCP Server running on port ${this.config.port}`);
         } else {
@@ -97,5 +115,12 @@ export class BraveSearchServer {
         resolve();
       });
     });
+  }
+
+  async stop(): Promise<void> {
+    await new Promise<void>((resolve) => {
+      this.httpServer.close(() => resolve());
+    });
+    await this.server.close();
   }
 }

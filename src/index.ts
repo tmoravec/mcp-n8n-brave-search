@@ -8,6 +8,7 @@ async function main() {
 
   process.on('SIGINT', async () => {
     console.log('\nShutting down...');
+    await server.stop();
     process.exit(0);
   });
 

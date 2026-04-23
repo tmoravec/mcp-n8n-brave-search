@@ -28,7 +28,7 @@ export const braveSearchInputSchema = z.object({
   query: z.string().describe('Search query (keywords, not nested)'),
   count: z.number().min(1).max(MAX_COUNT).optional().describe(`Results to return (max ${MAX_COUNT})`),
   country: z.string().optional().describe('2-char country code. Must not be "CZ" — use "ALL" instead'),
-  freshness: z.enum(['pd', 'pw', 'pm', 'py']).optional().describe('Time filter: "pd" (past day), "pw" (past week), "pm" (past month), "py" (past year)'),
+  freshness: z.enum(['pd', 'pw', 'pm', 'py']).optional().describe('Time filter'),
   search_lang: z.string().optional().describe('Language code'),
 });
 

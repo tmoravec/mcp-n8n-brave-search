@@ -1,6 +1,16 @@
-import { test } from 'node:test';
+import { test, beforeEach, afterEach } from 'node:test';
 import assert from 'node:assert';
 import { loadConfig } from '../src/config.js';
+
+const originalEnv = { ...process.env };
+
+beforeEach(() => {
+  Object.assign(process.env, originalEnv);
+});
+
+afterEach(() => {
+  Object.assign(process.env, originalEnv);
+});
 
 test('loadConfig parses valid env vars', () => {
   process.env.N8N_URL = 'https://example.com/webhook';
@@ -14,11 +24,6 @@ test('loadConfig parses valid env vars', () => {
   assert.strictEqual(config.n8nToken, 'secret');
   assert.strictEqual(config.port, 3000);
   assert.strictEqual(config.debug, true);
-
-  delete process.env.N8N_URL;
-  delete process.env.N8N_TOKEN;
-  delete process.env.PORT;
-  delete process.env.DEBUG;
 });
 
 test('loadConfig throws error for missing N8N_URL', () => {

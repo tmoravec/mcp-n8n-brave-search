@@ -66,48 +66,64 @@ test('buildN8NRequestUrl rejects empty query string', () => {
 });
 test('handleBraveSearch returns formatted result on success', async () => {
     const originalFetch = globalThis.fetch;
-    globalThis.fetch = async () => ({
-        ok: true,
-        status: 200,
-        json: async () => [{ title: 'Test', url: 'https://example.com' }],
-    });
-    const result = await handleBraveSearch({ query: 'test' }, N8N_URL, N8N_TOKEN);
-    assert.strictEqual(result.query, 'test');
-    assert.ok(Array.isArray(result.results));
-    assert.strictEqual(result.results.length, 1);
-    globalThis.fetch = originalFetch;
+    try {
+        globalThis.fetch = async () => ({
+            ok: true,
+            status: 200,
+            json: async () => [{ title: 'Test', url: 'https://example.com' }],
+        });
+        const result = await handleBraveSearch({ query: 'test' }, N8N_URL, N8N_TOKEN);
+        assert.strictEqual(result.query, 'test');
+        assert.ok(Array.isArray(result.results));
+        assert.strictEqual(result.results.length, 1);
+    }
+    finally {
+        globalThis.fetch = originalFetch;
+    }
 });
 test('handleBraveSearch throws error on non-200 response', async () => {
     const originalFetch = globalThis.fetch;
-    globalThis.fetch = async () => ({
-        ok: false,
-        status: 500,
-    });
-    await assert.rejects(async () => handleBraveSearch({ query: 'test' }, N8N_URL, N8N_TOKEN), /n8n request failed with status 500/);
-    globalThis.fetch = originalFetch;
+    try {
+        globalThis.fetch = async () => ({
+            ok: false,
+            status: 500,
+        });
+        await assert.rejects(async () => handleBraveSearch({ query: 'test' }, N8N_URL, N8N_TOKEN), /n8n request failed with status 500/);
+    }
+    finally {
+        globalThis.fetch = originalFetch;
+    }
 });
 test('handleBraveSearch throws error on network failure', async () => {
     const originalFetch = globalThis.fetch;
-    globalThis.fetch = async () => {
-        throw new Error('Network timeout');
-    };
-    await assert.rejects(async () => handleBraveSearch({ query: 'test' }, N8N_URL, N8N_TOKEN), /Network timeout/);
-    globalThis.fetch = originalFetch;
+    try {
+        globalThis.fetch = async () => {
+            throw new Error('Network timeout');
+        };
+        await assert.rejects(async () => handleBraveSearch({ query: 'test' }, N8N_URL, N8N_TOKEN), /Network timeout/);
+    }
+    finally {
+        globalThis.fetch = originalFetch;
+    }
 });
 test('handleBraveSearch passes correct headers to n8n', async () => {
     const originalFetch = globalThis.fetch;
-    let capturedAuthorization = '';
-    globalThis.fetch = async (_url, init) => {
-        const headers = init?.headers || {};
-        capturedAuthorization = headers['Authorization'] || '';
-        return {
-            ok: true,
-            status: 200,
-            json: async () => ({ results: [] }),
+    try {
+        let capturedAuthorization = '';
+        globalThis.fetch = async (_url, init) => {
+            const headers = init?.headers || {};
+            capturedAuthorization = headers['Authorization'] || '';
+            return {
+                ok: true,
+                status: 200,
+                json: async () => ({ results: [] }),
+            };
         };
-    };
-    await handleBraveSearch({ query: 'test' }, N8N_URL, N8N_TOKEN);
-    assert.strictEqual(capturedAuthorization, 'Bearer secret');
-    globalThis.fetch = originalFetch;
+        await handleBraveSearch({ query: 'test' }, N8N_URL, N8N_TOKEN);
+        assert.strictEqual(capturedAuthorization, 'Bearer secret');
+    }
+    finally {
+        globalThis.fetch = originalFetch;
+    }
 });
 //# sourceMappingURL=brave-search.test.js.map

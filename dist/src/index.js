@@ -6,6 +6,7 @@ async function main() {
     const server = new BraveSearchServer(config);
     process.on('SIGINT', async () => {
         console.log('\nShutting down...');
+        await server.stop();
         process.exit(0);
     });
     await server.start();
