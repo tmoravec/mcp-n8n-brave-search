@@ -1,0 +1,104 @@
+{
+  "id": "new_plugin_id_76948405",
+  "uuid": "9ddb59a4-9052-4092-90d7-43db7c46154b",
+  "title": "Brave Search",
+  "iconURL": "https://www.typingmind.com/api/sync-v2/blobs/tmb-99fe7138-8459-422e-b7a2-686af41ec12e-unnamed-file",
+  "syncedAt": "2026-03-10T07:40:44.000Z",
+  "createdAt": "2026-02-18T08:52:03.299Z",
+  "deletedAt": null,
+  "oauthConfig": null,
+  "permissions": [],
+  "userSettings": [
+    {
+      "name": "n8n_token",
+      "type": "password",
+      "label": "n8n Token",
+      "description": "For authenticating the n8n webhook that triggers the workflow."
+    }
+  ],
+  "pluginFunctions": [
+    {
+      "id": "e49236ec-89b3-424f-a3d1-a88a2be6c644",
+      "name": "Brave Web Search",
+      "httpAction": {
+        "id": "580cfc75-ad1c-48c4-8fdc-3ef71a9a1a56",
+        "url": "https://ted-n8n.ddns.net/webhook/brave-search-typingmind?query={query}&count={count}&country={country}&search_lang={search_lang}&freshness={freshness}",
+        "name": "",
+        "method": "GET",
+        "hasHeaders": true,
+        "requestHeaders": "{\n    \"Accept\": \"application/json\",\n    \"Accept-Encoding\": \"gzip\",\n    \"Authorization\": \"Bearer {n8n_token}\"\n  }"
+      },
+      "openaiSpec": {
+        "name": "brave_web_search",
+        "parameters": {
+          "type": "object",
+          "required": [
+            "query",
+            "count",
+            "country",
+            "search_lang"
+          ],
+          "properties": {
+            "count": {
+              "type": "number",
+              "default": 4,
+              "description": "Number of results to return (default: 4, max: 10)"
+            },
+            "query": {
+              "type": "string",
+              "description": "The search query. Be specific and use keywords for better results."
+            },
+            "country": {
+              "type": "string",
+              "default": "ALL",
+              "description": "The 2 character country code where the search results come from. Must not be CZ - use ALL instead!"
+            },
+            "freshness": {
+              "enum": [
+                "pd",
+                "pw",
+                "pm",
+                "py"
+              ],
+              "type": "string",
+              "description": "Filters search results by when they were discovered. pd: last 24 hours, pw: last 7 days, pm: last 31 days, py: last 365 days."
+            },
+            "search_lang": {
+              "type": "string",
+              "default": "en-gb",
+              "description": "The 2 or more character language code for which the search results are provided."
+            }
+          }
+        },
+        "description": "Search the web using Brave Search. Returns relevant web pages, news, and information. Use this for finding current information, news, facts, or researching topics."
+      },
+      "outputType": "respond_to_ai",
+      "implementationType": "http"
+    }
+  ],
+  "overviewMarkdown": "Search the web using Brave Search API. This plugin allows the AI assistant to perform real-time web searches and retrieve relevant information. Powered by custom n8n workflow (that simply calls the Brave API).",
+  "authenticationType": "AUTH_TYPE_NONE",
+  "dynamicContextEndpoints": [
+    {
+      "id": "d18a80f3-1d6f-48a8-a3d7-30721803bc1c",
+      "url": "",
+      "name": "Web Search with Brave",
+      "method": "GET",
+      "source": "static",
+      "staticContent": "You have access to Brave Search API to search the web for current information. Use this when you need to find recent news, verify facts, or research topics that require up-to-date information. Keep the query simple - as in, no nesting with parentheses or similar.\n\nUse these defaults, unless told otherwise:\n- count: 4\n- country: ALL\n- freshness: skip\n- search_lang: en-gb",
+      "cacheDurationHours": 1,
+      "cacheRefreshPolicy": "REFRESH_NEVER"
+    },
+    {
+      "id": "0918de1a-9f64-4a63-b40a-29da7ab0197f",
+      "url": "",
+      "name": "Reading the Results",
+      "method": "GET",
+      "source": "static",
+      "staticContent": "Unless you're 100% confident in your response from the search result snippets, read the web pages individually using the Read Web Page plugin if available. Use that to get additional context and details.",
+      "cacheDurationHours": 1,
+      "cacheRefreshPolicy": "REFRESH_NEVER"
+    }
+  ],
+  "sharedOAuthConnectionID": null
+}
